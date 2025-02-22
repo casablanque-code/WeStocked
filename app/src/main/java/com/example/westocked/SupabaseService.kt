@@ -1,3 +1,5 @@
+@file:Suppress("UNREACHABLE_CODE")
+
 package com.example.westocked
 
 import io.ktor.client.*
@@ -5,6 +7,8 @@ import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.HttpResponse
+import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.Serializable
@@ -24,7 +28,7 @@ class SupabaseService {
     private val client = HttpClient(CIO) {
         install(ContentNegotiation) {
             // Игнорировать неизвестные поля в JSON
-            json(Json { ignoreUnknownKeys =false })
+            json(Json { ignoreUnknownKeys =true })
         }
     }
 
@@ -42,7 +46,19 @@ class SupabaseService {
         }.body()
     }
 
+    suspend fun updateEquipment(equipment: Equipment): Boolean {
+        // Используем PATCH-запрос для обновления записи, фильтруя по inventory_number
+        val response: HttpResponse = client.patch("$baseUrl/equipment") {
+            header("apikey", anonKey)
+            header("Authorization", "Bearer $anonKey")
+            header("Content-Type", "application/json")
+            parameter("inventory_number", "eq.${equipment.inventory_number}")
+            setBody(Json.encodeToString(Equipment.serializer(), equipment))
+        }
+        // При успешном обновлении Supabase возвращает статус 204 (No Content)
+        return response.status == HttpStatusCode.NoContent
+
     fun close() {
         client.close()
     }
-}
+}}

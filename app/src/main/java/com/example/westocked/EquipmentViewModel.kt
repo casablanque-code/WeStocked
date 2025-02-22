@@ -1,14 +1,12 @@
 package com.example.westocked
 
-import android.os.Parcel
-import android.os.Parcelable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class EquipmentViewModel() : ViewModel() {
+class EquipmentViewModel : ViewModel() {
 
     private val supabaseService = SupabaseService()
 
@@ -30,8 +28,30 @@ class EquipmentViewModel() : ViewModel() {
         }
     }
 
+    /**
+     * Обновление информации об оборудовании.
+     * Вызывает метод updateEquipment() в SupabaseService и при успехе обновляет локальный список.
+     */
+    fun updateEquipment(updatedEquipment: Equipment) {
+        viewModelScope.launch {
+            try {
+                val success = supabaseService.updateEquipment(updatedEquipment)
+                if (success) {
+                    _equipmentList.value = _equipmentList.value.map { equipment ->
+                        if (equipment.inventory_number == updatedEquipment.inventory_number)
+                            updatedEquipment
+                        else
+                            equipment
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     override fun onCleared() {
-        supabaseService.close()
+        //supabaseService.close()
         super.onCleared()
     }
 }
