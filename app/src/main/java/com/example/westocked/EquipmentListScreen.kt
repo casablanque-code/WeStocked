@@ -86,13 +86,15 @@ fun EquipmentListScreen(equipmentViewModel: EquipmentViewModel = viewModel()) {
                 coroutineScope.launch {
                     snackbarHostState.showSnackbar("Оборудование с таким инвентарным номером уже существует")
                 }
-                delay(2000)
+                delay(5000)
                 highlightedEquipment = null
+
+
+            scannedInventoryNumber = null
             } else {
                 // Если номер не найден – открываем диалог добавления
                 showAddDialog = true
             }
-            scannedInventoryNumber = null
         }
     }
 
@@ -226,7 +228,8 @@ fun EquipmentListScreen(equipmentViewModel: EquipmentViewModel = viewModel()) {
     if (showAddDialog) {
         AddEquipmentDialog(
             prefilledInventoryNumber = scannedInventoryNumber,
-            onDismiss = { showAddDialog = false },
+            onDismiss = { showAddDialog = false
+                scannedInventoryNumber = null},
             onSave = { newEquipment ->
                 // Если оборудование с таким номером уже существует – показываем сообщение и подсвечиваем карточку
                 val duplicate = equipmentList.find { it.inventory_number == newEquipment.inventory_number }
@@ -246,13 +249,14 @@ fun EquipmentListScreen(equipmentViewModel: EquipmentViewModel = viewModel()) {
                         if (index != -1) {
                             listState.animateScrollToItem(index, scrollOffset = 0)
                         }
-                        delay(2000)
+                        delay(5000)
                         highlightedEquipment = null
                     }
                 } else {
                     equipmentViewModel.addEquipment(newEquipment)
                 }
                 showAddDialog = false
+                scannedInventoryNumber = null
             }
         )
     }

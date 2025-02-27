@@ -111,6 +111,8 @@ dependencies {
 
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
 
+    implementation("androidx.compose.foundation:foundation:1.3.1")
+    implementation("com.google.accompanist:accompanist-insets:0.30.1")
 
 
 

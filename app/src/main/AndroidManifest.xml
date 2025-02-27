@@ -17,10 +17,13 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.WeStocked"
         tools:targetApi="31">
+
         <activity
             android:name=".MainActivity"
+            android:screenOrientation="portrait"
             android:exported="true"
             android:label="@string/app_name"
+            android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.WeStocked">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
