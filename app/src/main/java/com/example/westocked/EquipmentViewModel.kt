@@ -21,28 +21,19 @@ class EquipmentViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val list = supabaseService.fetchEquipment()
-                _equipmentList.value = list
+                _equipmentList.value = list.sortedBy { it.inventory_number }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
     }
 
-    /**
-     * Обновление информации об оборудовании.
-     * Вызывает метод updateEquipment() в SupabaseService и при успехе обновляет локальный список.
-     */
-    fun updateEquipment(updatedEquipment: Equipment) {
+    fun updateEquipment(updated: Equipment) {
         viewModelScope.launch {
             try {
-                val success = supabaseService.updateEquipment(updatedEquipment)
+                val success = supabaseService.updateEquipment(updated)
                 if (success) {
-                    _equipmentList.value = _equipmentList.value.map { equipment ->
-                        if (equipment.inventory_number == updatedEquipment.inventory_number)
-                            updatedEquipment
-                        else
-                            equipment
-                    }
+                    fetchEquipment()
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -50,8 +41,16 @@ class EquipmentViewModel : ViewModel() {
         }
     }
 
-    override fun onCleared() {
-        //supabaseService.close()
-        super.onCleared()
+    fun addEquipment(newEquipment: Equipment) {
+        viewModelScope.launch {
+            try {
+                val success = supabaseService.addEquipment(newEquipment)
+                if (success) {
+                    fetchEquipment()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 }

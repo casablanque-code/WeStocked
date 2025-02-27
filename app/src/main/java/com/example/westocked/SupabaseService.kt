@@ -1,5 +1,3 @@
-@file:Suppress("UNREACHABLE_CODE")
-
 package com.example.westocked
 
 import io.ktor.client.*
@@ -12,7 +10,6 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.Serializable
-
 
 @Serializable
 data class Equipment(
@@ -27,17 +24,15 @@ class SupabaseService {
 
     private val client = HttpClient(CIO) {
         install(ContentNegotiation) {
-            // Игнорировать неизвестные поля в JSON
-            json(Json { ignoreUnknownKeys =true })
+            json(Json { ignoreUnknownKeys = true })
         }
     }
 
-    // Замените данные на свои:
+    // URL и ключи:
     private val baseUrl = "https://jfqvygmcauhkibpvomjc.supabase.co/rest/v1"
-    private val tableName = "equipment" // Имя вашей таблицы
+    private val tableName = "equipment"
     private val anonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmcXZ5Z21jYXVoa2licHZvbWpjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgyMTE2MTEsImV4cCI6MjA1Mzc4NzYxMX0.GRLgecv63rchB-_w5c2Cmukk1KcZ8VF6ocTXzUDfnvk"
 
-    // Функция выполняет GET-запрос и возвращает список оборудования
     suspend fun fetchEquipment(): List<Equipment> {
         val url = "$baseUrl/$tableName?select=*"
         return client.get(url) {
@@ -47,18 +42,29 @@ class SupabaseService {
     }
 
     suspend fun updateEquipment(equipment: Equipment): Boolean {
-        // Используем PATCH-запрос для обновления записи, фильтруя по inventory_number
-        val response: HttpResponse = client.patch("$baseUrl/equipment") {
+        val response: HttpResponse = client.patch("$baseUrl/$tableName") {
             header("apikey", anonKey)
             header("Authorization", "Bearer $anonKey")
             header("Content-Type", "application/json")
             parameter("inventory_number", "eq.${equipment.inventory_number}")
             setBody(Json.encodeToString(Equipment.serializer(), equipment))
         }
-        // При успешном обновлении Supabase возвращает статус 204 (No Content)
         return response.status == HttpStatusCode.NoContent
+    }
+
+    suspend fun addEquipment(equipment: Equipment): Boolean {
+        // POST-запрос для добавления нового оборудования
+        val response: HttpResponse = client.post("$baseUrl/$tableName") {
+            header("apikey", anonKey)
+            header("Authorization", "Bearer $anonKey")
+            header("Content-Type", "application/json")
+            setBody(Json.encodeToString(Equipment.serializer(), equipment))
+        }
+        // Ждем успешный статус "201 Created". Можно проверить в postman
+        return response.status == HttpStatusCode.Created
+    }
 
     fun close() {
         client.close()
     }
-}}
+}

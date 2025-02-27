@@ -13,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.westocked"
-        minSdk = 24
+        minSdk = 21
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -45,6 +45,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        isCoreLibraryDesugaringEnabled = true
     }
     kotlinOptions {
         jvmTarget = "11"
@@ -58,7 +59,9 @@ android {
 }
 
 dependencies {
-
+    implementation("androidx.compose.material:material-icons-extended:1.4.3")
+    // или, если используете Material3:
+    implementation("androidx.compose.material3:material3:1.1.0")
 
     // Ktor клиент
     implementation("io.ktor:ktor-client-core:2.3.3")
@@ -95,6 +98,32 @@ dependencies {
 
 
 
+    // CameraX
+    //implementation("androidx.camera:camera-camera2:1.2.0")
+    //implementation("androidx.camera:camera-lifecycle:1.2.0")
+    //implementation("androidx.camera:camera-view:1.0.0-alpha31")
+    //implementation("androidx.camera:camera-compose:1.2.0-alpha08")
+
+    implementation("androidx.camera:camera-camera2:1.2.0")
+    implementation("androidx.camera:camera-lifecycle:1.2.0")
+    implementation("androidx.camera:camera-view:1.2.0")
+    implementation("com.google.mlkit:barcode-scanning:17.0.3")
+
+    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
+
+
+
+
+    // ML Kit Barcode Scanning
+    /*implementation("com.google.mlkit:barcode-scanning:17.0.3")
+    implementation(libs.google.barcode.scanning)
+    implementation("com.google.android.gms:play-services-mlkit-barcode-scanning:16.2.1")*/
+
+    //ZXing scanner
+    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
+    implementation("com.google.zxing:core:3.4.1")
+
+
 
     implementation("androidx.compose.ui:ui:1.3.3")
     implementation("androidx.compose.material:material:1.3.1")
@@ -105,7 +134,8 @@ dependencies {
     // Для отладки preview:
     debugImplementation("androidx.compose.ui:ui-tooling:1.3.3")
 
-
+    /*implementation("androidx.compose.material:material-icons-core:1.4.0")
+    implementation("androidx.compose.material:material-icons-extended:1.4.0")*/
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -137,4 +167,6 @@ dependencies {
     implementation("com.google.android.material:material:1.9.0")
     implementation("androidx.compose.material3:material3:1.1.0-alpha08")
     implementation("io.github.jan-tennert.supabase:supabase-kt:2.6.1")
+
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }}}
