@@ -1,5 +1,6 @@
 package com.example.westocked
 
+import AddEquipmentDialog
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -13,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -46,24 +48,17 @@ fun EquipmentListScreen(equipmentViewModel: EquipmentViewModel = viewModel()) {
     var selectedEquipment by remember { mutableStateOf<Equipment?>(null) }
     var showAddDialog by remember { mutableStateOf(false) }
     var scannedInventoryNumber by remember { mutableStateOf<Long?>(null) }
-    // Переменная для выделения найденной карточки (например, если дубликат найден)
     var highlightedEquipment by remember { mutableStateOf<Equipment?>(null) }
-    // Переменная для управления показом экрана сканирования QR
     var showQrScanner by remember { mutableStateOf(false) }
-    // Состояние для Snackbar
     val snackbarHostState = remember { SnackbarHostState() }
-
-    // Состояние списка и scope для анимации прокрутки
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
-    // Если отсканирован номер – проверяем, есть ли он в списке
     LaunchedEffect(scannedInventoryNumber) {
         scannedInventoryNumber?.let { id ->
             val matchingEquipment = equipmentList.find { it.inventory_number == id }
             if (matchingEquipment != null) {
                 highlightedEquipment = matchingEquipment
-                // Определяем отфильтрованный список (тот же, что в UI)
                 val filtered = if (searchQuery.isBlank()) {
                     equipmentList
                 } else {
@@ -77,28 +72,23 @@ fun EquipmentListScreen(equipmentViewModel: EquipmentViewModel = viewModel()) {
                 }
                 val index = filtered.indexOfFirst { it.inventory_number == matchingEquipment.inventory_number }
                 if (index != -1) {
-                    // Прокручиваем к найденному элементу (подберите нужное смещение, здесь 0)
                     coroutineScope.launch {
                         listState.animateScrollToItem(index, scrollOffset = 0)
                     }
                 }
-                // Показываем сообщение о дубликате через Snackbar
                 coroutineScope.launch {
                     snackbarHostState.showSnackbar("Оборудование с таким инвентарным номером уже существует")
                 }
                 delay(5000)
                 highlightedEquipment = null
-
-
-            scannedInventoryNumber = null
+                scannedInventoryNumber = null
             } else {
-                // Если номер не найден – открываем диалог добавления
+                scannedInventoryNumber = id
                 showAddDialog = true
             }
         }
     }
 
-    // Фильтрация списка по всем полям
     val filteredList = if (searchQuery.isBlank()) {
         equipmentList
     } else {
@@ -117,62 +107,58 @@ fun EquipmentListScreen(equipmentViewModel: EquipmentViewModel = viewModel()) {
                 .fillMaxSize()
                 .padding(8.dp)
         ) {
-            // Заголовок с количеством элементов (уменьшённый шрифт)
             Text(
-                text = "Оборудование (${filteredList.size} элементов)",
+                text = "Оборудование (${filteredList.size} шт.)",
                 style = MaterialTheme.typography.headlineSmall.copy(fontSize = 14.sp),
                 modifier = Modifier.padding(vertical = 3.dp)
             )
-            // Строка поиска (уменьшённая по вертикали)
             TextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                label = { Text("Поиск") },
+                label = { Text("Search") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 3.dp)
             )
             Spacer(modifier = Modifier.height(6.dp))
-            // Список карточек оборудования
             LazyColumn(state = listState) {
                 items(filteredList, key = { it.inventory_number }) { equipment ->
-                    // Если карточка соответствует выделенному оборудованию – изменяем фон
                     val isHighlighted = highlightedEquipment?.inventory_number == equipment.inventory_number
-                    Column(
+                    Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 8.dp)
+                            .padding(vertical = 4.dp)  // уменьшено расстояние между карточками
                             .clickable { selectedEquipment = equipment }
                             .background(
                                 color = if (isHighlighted)
                                     MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
                                 else MaterialTheme.colorScheme.surface
                             )
-                            .padding(16.dp)
+                            .padding(8.dp)  // уменьшены внутренние отступы
                     ) {
-                        Text(text = "ID: ${equipment.inventory_number}", style = MaterialTheme.typography.bodySmall)
-                        Text(text = "Name: ${equipment.name}", style = MaterialTheme.typography.bodySmall)
-                        Text(text = "Location: ${equipment.location}", style = MaterialTheme.typography.bodySmall)
-                        Text(text = "Serial Number: ${equipment.serial_number}", style = MaterialTheme.typography.bodySmall)
-                        Text(text = "Mac Address: ${equipment.mac_address}", style = MaterialTheme.typography.bodySmall)
+                        Column(modifier = Modifier.padding(8.dp)) {
+                            Text(text = "ID: ${equipment.inventory_number}", style = MaterialTheme.typography.bodySmall)
+                            Text(text = "Name: ${equipment.name}", style = MaterialTheme.typography.bodySmall)
+                            Text(text = "Location: ${equipment.location}", style = MaterialTheme.typography.bodySmall)
+                            Text(text = "Serial Number: ${equipment.serial_number}", style = MaterialTheme.typography.bodySmall)
+                            Text(text = "Mac Address: ${equipment.mac_address}", style = MaterialTheme.typography.bodySmall)
+                        }
                     }
                 }
             }
         }
 
-        // Кнопка "Добавить"
         FloatingActionButton(
             onClick = { showAddDialog = true },
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .padding(16.dp)
         ) {
-            Icon(imageVector = Icons.Filled.Add, contentDescription = "Добавить")
+            Icon(imageVector = Icons.Filled.Add, contentDescription = "Add")
         }
 
-        // Кнопка "Скан QR"
         FloatingActionButton(
-            onClick = { /* При нажатии запускаем экран сканера QR */ showQrScanner = true },
+            onClick = { showQrScanner = true },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp)
@@ -180,7 +166,6 @@ fun EquipmentListScreen(equipmentViewModel: EquipmentViewModel = viewModel()) {
             Icon(imageVector = Icons.Filled.QrCodeScanner, contentDescription = "Скан QR")
         }
 
-        // Кнопка "Наверх"
         FloatingActionButton(
             onClick = {
                 coroutineScope.launch {
@@ -194,7 +179,6 @@ fun EquipmentListScreen(equipmentViewModel: EquipmentViewModel = viewModel()) {
             Text("Up")
         }
 
-        // Snackbar для оповещений
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.TopCenter)
@@ -212,7 +196,6 @@ fun EquipmentListScreen(equipmentViewModel: EquipmentViewModel = viewModel()) {
         )
     }
 
-    // Диалог редактирования оборудования
     selectedEquipment?.let { equipment ->
         EditEquipmentDialog(
             equipment = equipment,
@@ -220,24 +203,27 @@ fun EquipmentListScreen(equipmentViewModel: EquipmentViewModel = viewModel()) {
             onSave = { updatedEquipment ->
                 equipmentViewModel.updateEquipment(updatedEquipment)
                 selectedEquipment = null
+            },
+            onDelete = {
+                equipmentViewModel.deleteEquipment(equipment)
+                selectedEquipment = null
             }
         )
     }
 
-    // Диалог добавления нового оборудования с проверкой дубликата
     if (showAddDialog) {
         AddEquipmentDialog(
             prefilledInventoryNumber = scannedInventoryNumber,
-            onDismiss = { showAddDialog = false
-                scannedInventoryNumber = null},
+            onDismiss = {
+                showAddDialog = false
+                scannedInventoryNumber = null
+            },
             onSave = { newEquipment ->
-                // Если оборудование с таким номером уже существует – показываем сообщение и подсвечиваем карточку
                 val duplicate = equipmentList.find { it.inventory_number == newEquipment.inventory_number }
                 if (duplicate != null) {
                     highlightedEquipment = duplicate
                     coroutineScope.launch {
                         snackbarHostState.showSnackbar("Оборудование с таким инвентарным номером уже существует")
-                        // Прокручиваем до дубликата
                         val filtered = if (searchQuery.isBlank()) equipmentList else equipmentList.filter { equipment ->
                             equipment.name.contains(searchQuery, ignoreCase = true) ||
                                     equipment.inventory_number.toString().contains(searchQuery) ||

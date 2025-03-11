@@ -17,9 +17,10 @@ import com.google.zxing.integration.android.IntentIntegrator
 import com.google.zxing.integration.android.IntentResult
 
 /**
- * Этот composable запускает сканирование QR-кода с помощью ZXing.
+ * Этот composable запускает сканирование QR‑кода с помощью ZXing.
  *
- * Если сканирование успешно – результат (число) передаётся в onResult.
+ * При успешном сканировании извлекается первая строка QR‑кода,
+ * преобразуемая в Long (инвентарный номер), и передаётся в onResult.
  * Если сканирование отменено – вызывается onCancel.
  */
 @Composable
@@ -28,10 +29,7 @@ fun QrCodeScannerScreen(
     onCancel: () -> Unit
 ) {
     val context = LocalContext.current
-    // Приводим context к ComponentActivity
     val activity = context as? ComponentActivity
-
-    // Создаем launcher для запуска QR-сканера
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -39,6 +37,7 @@ fun QrCodeScannerScreen(
             val intentResult: IntentResult? =
                 IntentIntegrator.parseActivityResult(result.resultCode, result.data)
             val rawValue = intentResult?.contents
+            // Извлекаем первую строку QR-кода и преобразуем её в Long
             val firstLine = rawValue?.lines()?.firstOrNull()
             val number = firstLine?.toLongOrNull()
             onResult(number)
@@ -47,7 +46,6 @@ fun QrCodeScannerScreen(
         }
     }
 
-    // Запускаем сканирование при входе в композицию
     LaunchedEffect(Unit) {
         if (activity != null) {
             val integrator = IntentIntegrator(activity)

@@ -41,6 +41,21 @@ class EquipmentViewModel : ViewModel() {
         }
     }
 
+    fun deleteEquipment(equipment: Equipment) {
+        viewModelScope.launch {
+            try {
+                val success = supabaseService.deleteEquipment(equipment)
+                if (success) {
+                    // После успешного удаления – обновляем список
+                    fetchEquipment()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+
     fun addEquipment(newEquipment: Equipment) {
         viewModelScope.launch {
             try {

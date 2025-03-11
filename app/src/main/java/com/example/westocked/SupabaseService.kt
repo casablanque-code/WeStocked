@@ -52,6 +52,18 @@ class SupabaseService {
         return response.status == HttpStatusCode.NoContent
     }
 
+    suspend fun deleteEquipment(equipment: Equipment): Boolean {
+        // Выполняем DELETE-запрос, фильтруя по inventory_number
+        val response: HttpResponse = client.delete("$baseUrl/$tableName") {
+            header("apikey", anonKey)
+            header("Authorization", "Bearer $anonKey")
+            parameter("inventory_number", "eq.${equipment.inventory_number}")
+        }
+        // При успешном удалении база возвращает статус 204 (No Content)
+        return response.status == HttpStatusCode.NoContent
+    }
+
+
     suspend fun addEquipment(equipment: Equipment): Boolean {
         // POST-запрос для добавления нового оборудования
         val response: HttpResponse = client.post("$baseUrl/$tableName") {
